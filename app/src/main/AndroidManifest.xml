@@ -10,10 +10,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Chatty">
         <activity
-            android:name=".LoginActivity"
-            android:exported="true" />
+            android:name=".ChatLogActivity"
+            android:exported="true">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".LatestMessageActivity" />
+        </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".LatestMessageActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,6 +25,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".LoginActivity"
+            android:exported="true" />
+        <activity
+            android:name=".NewMessageActivity"
+            android:exported="true">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".LatestMessageActivity" />
+        </activity>
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="true" />
     </application>
 
 </manifest>

@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/teal_700"
-        tools:context=".MainActivity">
+        tools:context=".RegisterActivity">
 
         <ImageView
             android:id="@+id/imageView"
@@ -33,7 +33,7 @@
             android:layout_marginTop="16dp"
             android:layout_marginEnd="16dp"
             android:background="@color/white"
-            android:hint="Name"
+            android:hint="Email"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/imageView" />
@@ -46,7 +46,7 @@
             android:layout_marginTop="24dp"
             android:layout_marginEnd="16dp"
             android:background="@color/white"
-            android:hint="Email"
+            android:hint="Nama"
             android:inputType="textEmailAddress"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
