@@ -16,6 +16,7 @@ import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.squareup.picasso.Picasso
 import com.xwray.groupie.GroupieAdapter
 import com.xwray.groupie.databinding.BindableItem
 import com.xwray.groupie.groupiex.plusAssign
@@ -24,13 +25,15 @@ class ChatLogActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChatLogBinding
     val adapter = GroupieAdapter()
 
+    var toUser: User ?= null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_chat_log)
 
 
-        val user = intent.getParcelableExtra<User>(USER_KEY)
-        supportActionBar?.title = user!!.username
+        toUser = intent.getParcelableExtra<User>(USER_KEY)
+        supportActionBar?.title = toUser!!.username
 
         binding.rvMessage.layoutManager = LinearLayoutManager(this)
         binding.rvMessage.adapter = adapter
@@ -39,10 +42,11 @@ class ChatLogActivity : AppCompatActivity() {
         binding.btnSend.setOnClickListener {
             val text = binding.etMessage.text.toString()
             val fromId = FirebaseAuth.getInstance().uid
-            val user = intent.getParcelableExtra<User>(USER_KEY)
-            val toId = user!!.uid
+            val toId = toUser!!.uid
 
-            val ref = FirebaseDatabase.getInstance().getReference("/messages").push()
+//            val ref = FirebaseDatabase.getInstance().getReference("/messages").push()
+            val ref = FirebaseDatabase.getInstance().getReference("/user-messages/$fromId/$toId").push()
+            val toReference = FirebaseDatabase.getInstance().getReference("/user-messages/$toId/$fromId").push()
             val chatMessage = ChatMessage(
                 ref.key!!,
                 text,
@@ -52,22 +56,34 @@ class ChatLogActivity : AppCompatActivity() {
             )
             ref.setValue(chatMessage)
                 .addOnSuccessListener {
-
+                    binding.etMessage.text.clear()
+                    binding.rvMessage.smoothScrollToPosition(adapter.itemCount -1)
                 }
+            toReference.setValue(chatMessage)
+
+            val latestMessageRef = FirebaseDatabase.getInstance().getReference("/latest-messages/$fromId/$toId")
+            latestMessageRef.setValue(chatMessage)
+
+            val latestMessageToRef = FirebaseDatabase.getInstance().getReference("/latest-messages/$toId/$fromId")
+            latestMessageToRef.setValue(chatMessage)
         }
     }
 
     private fun listenForMessage() {
-        val ref = FirebaseDatabase.getInstance().getReference("/messages")
+        val fromId = FirebaseAuth.getInstance().uid
+        val toId = toUser!!.uid
+        val ref = FirebaseDatabase.getInstance().getReference("/user-messages/$fromId/$toId")
         ref.addChildEventListener(object : ChildEventListener{
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
                 val chatMessage = snapshot.getValue(ChatMessage::class.java)
                 if(chatMessage != null) {
                     if(chatMessage.fromId == FirebaseAuth.getInstance().uid) {
-                        adapter.add(ChatFrom(chatMessage))
+                        adapter.add(ChatFrom(chatMessage, LatestMessageActivity.currentUser!!))
                     }else {
-                        adapter.add(ChatTo(chatMessage))
+                        adapter.add(ChatTo(chatMessage, toUser!!))
                     }
+
+                    binding.rvMessage.scrollToPosition(adapter.itemCount -1)
                 }
             }
 
@@ -103,9 +119,10 @@ class ChatLogActivity : AppCompatActivity() {
     }
 }
 
-class ChatFrom(val chatMessage: ChatMessage): BindableItem<ChatFromRowBinding>(){
+class ChatFrom(val chatMessage: ChatMessage, val user: User): BindableItem<ChatFromRowBinding>(){
     override fun bind(binding: ChatFromRowBinding, position: Int) {
         binding.tvMessage.text = chatMessage.text
+        Picasso.get().load(user.profileImage).into(binding.ivUser)
     }
 
     override fun getLayout(): Int {
@@ -114,9 +131,10 @@ class ChatFrom(val chatMessage: ChatMessage): BindableItem<ChatFromRowBinding>()
 
 }
 
-class ChatTo(val chatMessage: ChatMessage): BindableItem<ChatToRowBinding>(){
+class ChatTo(val chatMessage: ChatMessage, val user: User): BindableItem<ChatToRowBinding>(){
     override fun bind(binding: ChatToRowBinding, position: Int) {
         binding.tvMessage.text = chatMessage.text
+        Picasso.get().load(user.profileImage).into(binding.ivUser)
     }
 
     override fun getLayout(): Int {
